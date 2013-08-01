@@ -1,5 +1,5 @@
 module Main where
 
-import DrawingWindow
+import PlayingWindow
 
-main = showDrawingWindow
+main = showWindow
