@@ -10,7 +10,6 @@ import Helper
 
 width = 1600
 height = 900
-basePower = 50
 
 data World = World {
     playerObject :: Object
@@ -31,7 +30,10 @@ freshWorld otherCells = World {
   }
 
 actualizeWorld :: DeltaSeconds -> World -> World
-actualizeWorld delta world = world { playerObject = updateObject (playerObject world) delta}
+actualizeWorld delta world = world { 
+                              playerObject = updateObject delta (playerObject world)
+                            , otherObjects = map (updateObject delta) (otherObjects world)
+                            }
 
 renderWorld :: World -> Picture
 renderWorld world = Pictures ((renderPlayer (playerObject world)) : (map (renderObject (mass (playerObject world))) (otherObjects world)))
@@ -41,9 +43,9 @@ renderWorld world = Pictures ((renderPlayer (playerObject world)) : (map (render
       where
         oColor = if (playerMass >= (mass object)) then blue else red
 
-updateObject :: Object -> DeltaSeconds -> Object
-updateObject oldObject delta = oldObject {   posX = updateP (posX oldObject) (velX oldObject) delta
-                                           , posY = updateP (posY oldObject) (velY oldObject) delta
+updateObject :: DeltaSeconds -> Object -> Object
+updateObject delta oldObject = oldObject {   posX = updateP (posX oldObject) (velX oldObject) (delta*10)
+                                           , posY = updateP (posY oldObject) (velY oldObject) (delta*10)
                                            , velX = updateV (velX oldObject) (accX oldObject)
                                            , velY = updateV (velY oldObject) (accY oldObject)
                                            , accX = updateA (accX oldObject) (mass oldObject) 
@@ -65,15 +67,33 @@ handleEvent :: Event -> World -> World
 handleEvent ev world = case ev of
     (EventKey key state _ (x, y)) -> case key of
         Char char -> world
-        SpecialKey key -> world { playerObject = playerObject'} 
-          where playerObject' = case state of
+        SpecialKey key -> world { playerObject = playerObject', otherObjects = otherObjects'} 
+          where (playerObject', otherObjects') = case state of
                                   Down -> case key of
-                                    KeyUp    -> (playerObject world) { accY = (accY (playerObject world)) + (calcAcc basePower (mass (playerObject world)))}
-                                    KeyDown  -> (playerObject world) { accY = (accY (playerObject world)) - (calcAcc basePower (mass (playerObject world)))}
-                                    KeyRight -> (playerObject world) { accX = (accX (playerObject world)) + (calcAcc basePower (mass (playerObject world)))}
-                                    KeyLeft  -> (playerObject world) { accX = (accX (playerObject world)) - (calcAcc basePower (mass (playerObject world)))}
-                                    _        -> (playerObject world)
+                                    KeyUp    -> 
+                                      ((playerObject world) { 
+                                          accY = applyAcc (+) (accY (playerObject world)) (playerObject world)
+                                        , mass = ejectMass (playerObject world)
+                                      },
+                                      copyB (playerObject world) : (otherObjects world))
+                                    KeyDown  -> 
+                                      ((playerObject world) { 
+                                          accY = applyAcc (-) (accY (playerObject world)) (playerObject world) 
+                                        , mass = ejectMass (playerObject world)
+                                      },
+                                      copyA (playerObject world) : (otherObjects world))
+                                    KeyRight -> ((playerObject world) { 
+                                          accX = applyAcc (+) (accX (playerObject world)) (playerObject world)
+                                        , mass = ejectMass (playerObject world)
+                                      }, 
+                                      copyL (playerObject world) : (otherObjects world))
+                                    KeyLeft  -> ((playerObject world) {
+                                          accX = applyAcc (-) (accX (playerObject world)) (playerObject world)
+                                        , mass = ejectMass (playerObject world)
+                                      }, 
+                                      copyR (playerObject world) : (otherObjects world))
+                                    _        -> ((playerObject world), (otherObjects world))
                                   Up   -> case key of
-                                    _        -> (playerObject world)
+                                    _        -> ((playerObject world), (otherObjects world))
         MouseButton button -> world
     (EventMotion (x, y)) -> world
