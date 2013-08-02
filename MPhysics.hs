@@ -1,3 +1,6 @@
+-- | The "MPhysics" module contains all functions needed to 
+-- model the physical properties of the HaskMoses world
+-- (i.e. acceleration and decelaration)
 module MPhysics where
 
 -- |Simple calculation of the acceleration
