@@ -10,5 +10,5 @@ data Object = Object {
   , accY :: Float
   , velX :: Float
   , velY :: Float
-}
+} | Invalid deriving (Show)
 

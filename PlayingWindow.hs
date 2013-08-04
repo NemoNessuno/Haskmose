@@ -1,4 +1,4 @@
-module PlayingWindow (showWindow) where
+module PlayingWindow {-(showWindow)-} where
 
 import Graphics.Gloss
 import Graphics.Gloss.Interface.IO.Game
@@ -30,7 +30,7 @@ freshWorld otherCells = World {
   }
 
 actualizeWorld :: DeltaSeconds -> World -> World
-actualizeWorld delta world = world { 
+actualizeWorld delta world = consumeObjects world { 
                               playerObject = updateObject delta (playerObject world)
                             , otherObjects = map (updateObject delta) (otherObjects world)
                             }
@@ -43,6 +43,13 @@ renderWorld world = Pictures ((renderPlayer (playerObject world)) : (map (render
       where
         oColor = if (playerMass >= (mass object)) then blue else red
 
+-- | Takes care of the consumation of 'Object's. Applies the neccessary changes to the World.
+consumeObjects :: World -> World
+consumeObjects world = World { playerObject = pO', otherObjects = oO' }
+                       where (pO', oO') = consumeList ((playerObject world), (otherObjects world))
+                       
+
+-- | Updates the position, velocity and acceleration of an object
 updateObject :: DeltaSeconds -> Object -> Object
 updateObject delta oldObject = oldObject {   posX = updateP (posX oldObject) (velX oldObject) (delta*10)
                                            , posY = updateP (posY oldObject) (velY oldObject) (delta*10)

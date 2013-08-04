@@ -1,5 +1,5 @@
 -- | The "LevelBuilder" modules encapsulates several ways to create Levels.
-module LevelBuilder where
+module LevelBuilder(createRandom) where
 
 import Types
 import Helper
