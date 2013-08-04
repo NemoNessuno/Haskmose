@@ -45,9 +45,8 @@ renderWorld world = Pictures ((renderPlayer (playerObject world)) : (map (render
 
 -- | Takes care of the consumation of 'Object's. Applies the neccessary changes to the World.
 consumeObjects :: World -> World
-consumeObjects world = World { playerObject = pO', otherObjects = oO' }
-                       where (pO', oO') = consumeList ((playerObject world), (otherObjects world))
-                       
+consumeObjects world = World { playerObject = pO', otherObjects = consumeEach oOs' }
+                       where (pO', oOs') = consumeList ((playerObject world), (otherObjects world))
 
 -- | Updates the position, velocity and acceleration of an object
 updateObject :: DeltaSeconds -> Object -> Object

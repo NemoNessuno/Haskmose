@@ -1,7 +1,7 @@
 -- | This module contains helper functions.
 -- Most notably the 'mkObject' function which creates
 -- a new 'Object'.
-module Helper(mkObject, copyB, copyL, copyA, copyR, updateA, updateP, updateV, ejectMass, applyAcc, consumeList) where
+module Helper(mkObject, copyB, copyL, copyA, copyR, updateA, updateP, updateV, ejectMass, applyAcc, consumeList, consumeEach) where
 
 import Types
 import MPhysics
@@ -93,7 +93,16 @@ consumeList (object, o:os)      = (object', o' ++ os')
                                       (object', o')   = case object'' of
                                                          Invalid   -> (Invalid, [o])
                                                          otherwise -> consumeList (object'', [o])
- 
+
+-- | Checks every Object in the List for consumation
+consumeEach :: [Object] -> [Object]
+consumeEach []     = []
+consumeEach [o]    = [o]
+consumeEach (o:os) = let (newO, newOs) = consumeList (o, os) in
+                      case newO of
+                        Invalid   -> consumeEach newOs
+                        otherwise -> newO : consumeEach newOs
+
 -- * Private
 
 -- | The mass that is ejected. And the force it causes.
