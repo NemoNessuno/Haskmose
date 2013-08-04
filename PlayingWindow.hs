@@ -51,12 +51,15 @@ consumeObjects world = World { playerObject = pO', otherObjects = oO' }
 
 -- | Updates the position, velocity and acceleration of an object
 updateObject :: DeltaSeconds -> Object -> Object
-updateObject delta oldObject = oldObject {   posX = updateP (posX oldObject) (velX oldObject) (delta*10)
-                                           , posY = updateP (posY oldObject) (velY oldObject) (delta*10)
-                                           , velX = updateV (velX oldObject) (accX oldObject)
-                                           , velY = updateV (velY oldObject) (accY oldObject)
-                                           , accX = updateA (accX oldObject) (mass oldObject) 
-                                           , accY = updateA (accY oldObject) (mass oldObject)}
+updateObject delta oldObject = oldObject {   posX = updateP (posX oldObject) (velX oldObject) (delta*50*dirX)
+                                           , posY = updateP (posY oldObject) (velY oldObject) (delta*50*dirY)
+                                           , velX = (updateV (velX oldObject) (accX oldObject)) * dirX
+                                           , velY = (updateV (velY oldObject) (accY oldObject)) * dirY
+                                           , accX = (updateA (accX oldObject) (mass oldObject)) * dirX
+                                           , accY = (updateA (accY oldObject) (mass oldObject)) * dirY}
+                               where
+                                dirX = if (abs (posX oldObject)) + (mass oldObject) >= width / 2 then -1 else 1
+                                dirY = if (abs (posY oldObject)) + (mass oldObject) >= height / 2 then -1 else 1
 
 -- | Draws an Object
 buildPicture :: Object -> Picture
