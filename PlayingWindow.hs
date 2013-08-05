@@ -18,35 +18,39 @@ data World = World {
 
 type DeltaSeconds = Float
 
-showWindow otherCells = play displayMode black 100 (freshWorld otherCells) renderWorld handleEvent actualizeWorld
+showWindow (playerObject, otherObjects) = play displayMode black 100 (freshWorld playerObject otherObjects) renderWorld handleEvent actualizeWorld
        where
         displayMode :: Display
         displayMode = FullScreen (floor width, floor height)
         
-freshWorld :: [Object] -> World
-freshWorld otherCells = World {
-  playerObject = mkObject 0 0 50 0 0
+freshWorld :: Object -> [Object] -> World
+freshWorld playerO otherCells = World {
+  playerObject = playerO
 , otherObjects = otherCells
   }
 
 actualizeWorld :: DeltaSeconds -> World -> World
-actualizeWorld delta world = consumeObjects world { 
-                              playerObject = updateObject delta (playerObject world)
-                            , otherObjects = map (updateObject delta) (otherObjects world)
-                            }
+actualizeWorld delta world = case (playerObject world) of
+                               Invalid   -> world
+                               otherwise -> consumeObjects world { 
+                                              playerObject = updateObject delta (playerObject world)
+                                              , otherObjects = map (updateObject delta) (otherObjects world)
+                                            }
 
 renderWorld :: World -> Picture
-renderWorld world = Pictures ((renderPlayer (playerObject world)) : (map (renderObject (mass (playerObject world))) (otherObjects world)))
-  where
-    renderPlayer player = Color green $ buildPicture player
-    renderObject playerMass object = Color oColor $ buildPicture object
-      where
-        oColor = if (playerMass >= (mass object)) then blue else red
+renderWorld world = case (playerObject world) of
+                      Invalid   -> Translate ((-width)/4) 0 $ Color red $ Text "Game Over!" 
+                      otherwise -> Pictures ((renderPlayer (playerObject world)) : (map (renderObject (mass (playerObject world))) (otherObjects world)))
+                                    where
+                                      renderPlayer player = Color green $ buildPicture player
+                                      renderObject playerMass object = Color oColor $ buildPicture object
+                                        where
+                                          oColor = if (playerMass >= (mass object)) then blue else red
 
 -- | Takes care of the consumation of 'Object's. Applies the neccessary changes to the World.
 consumeObjects :: World -> World
 consumeObjects world = World { playerObject = pO', otherObjects = consumeEach oOs' }
-                       where (pO', oOs') = consumeList ((playerObject world), (otherObjects world))
+                                      where (pO', oOs') = consumeList ((playerObject world), (otherObjects world))
 
 -- | Updates the position, velocity and acceleration of an object
 updateObject :: DeltaSeconds -> Object -> Object
